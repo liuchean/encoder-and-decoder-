@@ -75,7 +75,7 @@ F[i*8+u][j*8+v].Y=beta[u]*beta[v]*0.25*tempY; //0.25=(2/sqrt(8*8))
 
 ## 5.DPCM(Differential Pulse Code Modulation)
 在影像資料中，相鄰像素的數值通常非常接近。DPCM（Differential Pulse Code Modulation）利用這個特性，透過儲存「像素間的差值」而非「絕對值」，達到壓縮效果。
-###與傳統的儲存方式差別
+### 與傳統的儲存方式差別
 - 傳統儲存方式：直接儲存每個像素的絕對值
 - DPCM 儲存方式：只儲存每個像素與前一個像素的差值
 由於差值通常接近 0，使資料的分布更集中，進而降低資料的熵（entropy），減少編碼所需的位元數，提升壓縮效率
