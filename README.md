@@ -5,7 +5,7 @@
 ![流程圖](https://github.com/liuchean/encoder-and-decoder-/blob/main/images/%E6%B5%81%E7%A8%8B%E5%9C%96.png)
 
 # 各流程說明
-## 1.色度轉換(Color transform: RGB → YCbCr):將影像從 RGB 色彩空間轉換為 YCbCr，以分離亮度與色度資訊，便於壓縮與處理。
+## 1. 色度轉換(Color transform: RGB → YCbCr):將影像從 RGB 色彩空間轉換為 YCbCr，以分離亮度與色度資訊，便於壓縮與處理。
 ### RGB → YCbCr 色度轉換公式
 ```text
 Y  =  0.299 R + 0.587 G + 0.114 B
@@ -20,10 +20,10 @@ Y：亮度（Luminance）
 Cb/Cr：色度（Chrominance），分別表示藍色與紅色的偏移量
 Cb/Cr 的值透過加上 128 平移至 [0, 255] 範圍，方便儲存與後續整數運算
 
-## 2.DCT前處理(將像素移至-128到127之間)
+## 2. DCT前處理(將像素移至-128到127之間)
 將像素值減去 128 將值從 [0, 255] 平移至中心為零的範圍 [-128, 127]，即可執行 DCT，而在執行完IDCT後需要+128回復其值
 
-## 3.DCT(Discrete Cosine Transform)
+## 3. DCT(Discrete Cosine Transform)
 將像素資訊轉換到頻域中，由於視覺獲取重要資訊的頻域都集中在低頻，所以就可以將高頻細節抹除，以達到縮小圖片檔案大小，並且不損失太多細節的目的
 普遍的做法是將一圖片分成數個8*8的小方塊進行處理。
 ### 2D-DCT公式(8*8):
@@ -42,7 +42,7 @@ if(i==0){ beta[i] = 1.0/sqrt(2); }
 else{ beta[i] = 1.0; }
 F[i*8+u][j*8+v].Y=beta[u]*beta[v]*0.25*tempY; //0.25=(2/sqrt(8*8))
 ```
-## 4.Quantization
+## 4. Quantization
 在 JPEG 壓縮流程中，量化（Quantization）是將 DCT 處理後的頻率係數進一步簡化的步驟
 ### 量化的目的與原理
 將 DCT 轉換後的係數除以對應的「量化矩陣」值，並進行四捨五入
@@ -73,14 +73,14 @@ F[i*8+u][j*8+v].Y=beta[u]*beta[v]*0.25*tempY; //0.25=(2/sqrt(8*8))
     				    {99,99,99,99,99,99,99,99}};
 ```
 
-## 5.DPCM(Differential Pulse Code Modulation)
+## 5. DPCM(Differential Pulse Code Modulation)
 在影像資料中，相鄰像素的數值通常非常接近。DPCM（Differential Pulse Code Modulation）利用這個特性，透過儲存「像素間的差值」而非「絕對值」，達到壓縮效果。
 ### 與傳統的儲存方式差別
 - 傳統儲存方式：直接儲存每個像素的絕對值
 - DPCM 儲存方式：只儲存每個像素與前一個像素的差值
 由於差值通常接近 0，使資料的分布更集中，進而降低資料的熵（entropy），減少編碼所需的位元數，提升壓縮效率
 
-## 6.Zig-zag
+## 6. Zig-zag
 在 JPEG 壓縮中，DCT 轉換後的 8×8 區塊會產生 64 個頻率係數，為了便於後續RLE壓縮，這些係數會透過 Zig-zag 掃描展平為一條一維序列。
 ### 設計原則
 - 順序遵循「低頻 → 高頻」的排列邏輯，重要資訊在前，較不重要資訊在後
@@ -126,7 +126,7 @@ zig[5].Y = DPCM[0][2].Y;
 ...
 zig[63].Y = DPCM[7][7].Y; // 最右下角（最高頻）
 ```
-## RLE(Run-Length Encoding)
+## 7. RLE(Run-Length Encoding)
 RLE 編碼的核心是將連續重複的資料，用次數+資料值的方式表示，以減少儲存空間
 
 ### RLE範例
