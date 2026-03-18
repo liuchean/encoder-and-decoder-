@@ -216,7 +216,7 @@ if(argc==7){
 	ImgGray **Data_Gray = (ImgGray**)malloc(sizeof(ImgGray*)*H);
 	for(int i=0; i<H ;i++)
         Data_Gray[i]=(ImgGray*)malloc(sizeof(ImgGray)*W);
-////////////////////////////////////read Gray////////////////////////////////////////////
+////////////////////////////////////read Data////////////////////////////////////////////
   InputData2(fp_in, Data_Gray, bmpheader.height, bmpheader.width, skip);//read houses.bmp gray data
   fclose(fp_in);
 
@@ -245,8 +245,8 @@ if(argc==7){
 		uint8_t x[8][8];
 			for(int r=0; r<8; r++){
 				for(int c=0; c<8; c++){
-					basic[u][v][r][c] = cos(u*M_PI*(2*r+1)/16)*cos(v*M_PI*(2*c+1)/16);
-					x[r][c]= (uint8_t)(127.5+127.5*basic[u][v][r][c]);
+					basic[u][v][r][c] = cos(u*M_PI*(2*r+1)/16)*cos(v*M_PI*(2*c+1)/16); //8*8矩陣的2D-DCT基礎式
+					// x[r][c]= (uint8_t)(127.5+127.5*basic[u][v][r][c]);
 				}
 				
 			}							
@@ -261,8 +261,12 @@ if(argc==7){
 	double beta[8];
   //根據matlab寫入beta資料
 	for(int i=0; i<8; i++){//C[0] = (1/√2) , beat[1]~beat[7]為1
-		if(i==0){ beta[i] = 1.0/sqrt(2); }
-		else{ beta[i] = 1.0; }
+		if(i==0){
+			beta[i] = 1.0/sqrt(2); 
+		}
+		else{ 
+			beta[i] = 1.0; 
+		}
 	}
 
   //根據matlab進行DCT
@@ -277,12 +281,12 @@ if(argc==7){
 							tempCr=tempCr+f[i*8+r][j*8+c].Cr*basic[u][v][r][c];
 						}
 					}
-					F[i*8+u][j*8+v].Y=beta[u]*beta[v]*0.25*tempY; //0.25=(2/sqrt(8*8))
-					tempY=0;
-					F[i*8+u][j*8+v].Cb=beta[u]*beta[v]*0.25*tempCb; //0.25=(2/sqrt(8*8))
-					tempCb=0;
-					F[i*8+u][j*8+v].Cr=beta[u]*beta[v]*0.25*tempCr; //0.25=(2/sqrt(8*8))
-					tempCr=0;
+							F[i*8+u][j*8+v].Y=beta[u]*beta[v]*0.25*tempY; //0.25=(2/sqrt(8*8))
+							tempY=0;
+							F[i*8+u][j*8+v].Cb=beta[u]*beta[v]*0.25*tempCb; //0.25=(2/sqrt(8*8))
+							tempCb=0;
+							F[i*8+u][j*8+v].Cr=beta[u]*beta[v]*0.25*tempCr; //0.25=(2/sqrt(8*8))
+							tempCr=0;
 				}
 			}
 		}
@@ -293,26 +297,26 @@ if(argc==7){
 	//根據matlab進行量化
 	YCbCr **quan=mal_2D(quan,H,W);
    
-  FILE *QY=fopen(argv[3],"w");
+  	FILE *QY=fopen(argv[3],"w");
 	FILE *QCb=fopen(argv[4],"w");
 	FILE *QCr=fopen(argv[5],"w");
 	
         for(int u=0;u<8;u++){
 				for(int v=0;v<8;v++){
-        fprintf(QY,"%f ",Q[u][v]);
-        fprintf(QCb,"%f ",Q2[u][v]);
-        fprintf(QCr,"%f ",Q2[u][v]);
-        if(v==7){
-        fprintf(QY,"%f \n",Q[u][v]);
-        fprintf(QCb,"%f \n",Q2[u][v]);
-        fprintf(QCr,"%f \n",Q2[u][v]);
+			        fprintf(QY,"%f ",Q[u][v]);
+			        fprintf(QCb,"%f ",Q2[u][v]);
+			        fprintf(QCr,"%f ",Q2[u][v]);
+        			if(v==7){
+					        fprintf(QY,"%f \n",Q[u][v]);
+					        fprintf(QCb,"%f \n",Q2[u][v]);
+					        fprintf(QCr,"%f \n",Q2[u][v]);
          }
 				}
 			}
-  FILE *dim=fopen(argv[6],"w");
-      fprintf(dim,"H: %d\n",H);
-      fprintf(dim,"W: %d\n",W);
-  fclose(dim);
+  	FILE *dim=fopen(argv[6],"w");
+    fprintf(dim,"H: %d\n",H);
+    fprintf(dim,"W: %d\n",W);
+  	fclose(dim);
 	
 	FILE *qY=fopen(argv[7],"wb");
 	FILE *qCb=fopen(argv[8],"wb");
@@ -327,11 +331,11 @@ if(argc==7){
 		for(int j=0;j<W/8;j++){
 			for(int u=0;u<8;u++){
 				for(int v=0;v<8;v++){
-					quan[i*8+u][j*8+v].QY=(short)round(F[i*8+u][j*8+v].Y/Q[u][v]);
-					quan[i*8+u][j*8+v].eY=F[i*8+u][j*8+v].Y-(quan[i*8+u][j*8+v].QY*Q[u][v]);
+					quan[i*8+u][j*8+v].QY=(short)round(F[i*8+u][j*8+v].Y/Q[u][v]); //量化後的值
+					quan[i*8+u][j*8+v].eY=F[i*8+u][j*8+v].Y-(quan[i*8+u][j*8+v].QY*Q[u][v]); //誤差值(量化錢跟量化後的) 用於後續算SQNR
           
-					fwrite(&quan[i*8+u][j*8+v].QY,sizeof(short),1,qY);
-					fwrite(&quan[i*8+u][j*8+v].eY,sizeof(float),1,eY);
+					fwrite(&quan[i*8+u][j*8+v].QY,sizeof(short),1,qY);//儲存下來用於法一的還原
+					fwrite(&quan[i*8+u][j*8+v].eY,sizeof(float),1,eY);//儲存下來用於法一的還原
 					
 					quan[i*8+u][j*8+v].QCb=(short)round(F[i*8+u][j*8+v].Cb/Q2[u][v]);
 					quan[i*8+u][j*8+v].eCb=F[i*8+u][j*8+v].Cb-(quan[i*8+u][j*8+v].QCb*Q2[u][v]);
@@ -397,7 +401,7 @@ if(argc==7){
       sqnrCr[i][j]=10*log10(esqnrCr[i][j]/p0cr[i][j]);
     } 
   }
-  ///為了格式
+  ///為了輸出YCbCr的SQNR格式
   for(int i=0;i<8;i++){
     for(int u=0;u<8;u++){
       if(i==7&&u==7){
@@ -589,16 +593,19 @@ else if(argc==5){
 	}
 	free_2D(F,bH);
 ////////////////////////////////////////////DPCM///////////////////////////////////////////////////////////
+	//DPCM是儲存前後的差值作為壓縮方式
 	YCbCr **DPCM=mal_2D(DPCM,bH,bW);
 
 	for(int i=bH-1;i>=0;i--){
 		for(int j=bW-1;j>=0;j--){
 			if(i>0 && j==0){
+				//此段是因為第一行的值前面已經沒有值可以做相減了，所以需要做垂直的
 				quan[i][j].Y= quan[i][j].Y-quan[i-1][j].Y;
 				quan[i][j].Cb = quan[i][j].Cb-quan[i-1][j].Cb;
 				quan[i][j].Cr = quan[i][j].Cr-quan[i-1][j].Cr;
 			}
 			else if(j>0){
+				//正常情況下(水平計算)
 				quan[i][j].Y=quan[i][j].Y - quan[i][j-1].Y;
 				quan[i][j].Cb= quan[i][j].Cb -quan[i][j-1].Cb;
 				quan[i][j].Cr=quan[i][j].Cr - quan[i][j-1].Cr;
@@ -607,7 +614,8 @@ else if(argc==5){
 	}
 	for(int i=0; i<bH; i++){
 		for(int j=0; j<bW; j++){
-      DPCM[i][j].Y=quan[i][j].Y;
+			//[0,0]是為了還原解碼時候的依據，從0,0開始還原
+            DPCM[i][j].Y=quan[i][j].Y;
 			DPCM[i][j].Cb=quan[i][j].Cb;
 			DPCM[i][j].Cr=quan[i][j].Cr;
 
@@ -625,6 +633,24 @@ else if(argc==5){
  				   {35,36,48,49,57,58,62,63}};
 
 ///////////////////////////////////////zigzag//////////////////////////////////////
+	// 透過上方的zigzag table將一個2維陣列轉成一個一維陣列
+	//Zig-zag table的對應位置
+	//vec[0][0] = 0
+	//vec[0][1] = 1
+	//vec[1][0] = 2
+	//vec[2][0] = 3
+	//vec[1][1] = 4
+	//vec[0][2] = 5
+	//...
+	//如果將count=0時，即可展開成
+	//zig[0].Y = DPCM[0][0].Y;  // 最左上角（最低頻）
+	//zig[1].Y = DPCM[0][1].Y;
+	//zig[2].Y = DPCM[1][0].Y;
+	//zig[3].Y = DPCM[2][0].Y;
+	//zig[4].Y = DPCM[1][1].Y;
+	//zig[5].Y = DPCM[0][2].Y;
+	//...
+	//zig[63].Y = DPCM[7][7].Y; // 最右下角（最高頻）
 	int count=0;
 	YCbCr *zig=mal_1D(zig,bH*bW);
 
@@ -661,7 +687,7 @@ else if(argc==5){
   
   printf("%d",checknum);
   
-//////////////////////////////////////////////txt version/////////////////////////////////////
+/////////////////////////////////////輸出文字檔//////////////////////////////////////////////
   if(checknum==1){
   FILE *bin=fopen(argv[4], "wb");
   int average=(H*W)/64;//for more clear
@@ -672,25 +698,25 @@ else if(argc==5){
       //第一格為0連續出現的數量
       //第二個為打斷0連續出現的數=>即可存入
       if(buff==63){
+		  		//最後一個設定為00
 				RLE[index].rY=0;
 				RLE[index+1].rY=0;
 				break;
-
 			}
 			if(buff!=63&&zig[total*64+buff].Y==0) {
-			nzeroy++;
+				nzeroy++;// 計算有多少個連續0
 			}
 			else if(buff!=63&&zig[total*64+buff].Y!=0){
-				RLE[index].rY=nzeroy;
-        RLE[index].rY=zig[total*64+buff].Y;
-        index=index+2;
+				RLE[index].rY=nzeroy;//第一格為0連續出現的數量
+		        RLE[index+1].rY=zig[total*64+buff].Y;//第二個為打斷0連續出現的數=>即可存入
+		        index=index+2;//因為占兩格
 				nzeroy=0;
 			}
 		}
     total=total+1;
   }
      
-	index=0;
+		index=0;
         total=0; 
 	while(total<H*W){
 		for(int buff=0;buff<64;buff++){
@@ -736,6 +762,7 @@ else if(argc==5){
   
   free(zig);
   ////為了符合格式的寫法
+  /// 把剛剛寫的格式儲存成文字檔，以便還原的時候讀取使用
   FILE *ascii=fopen(argv[4], "w");
   for(int x=0;x<H/8;x++){
      for(int y=0;y<W/8;y++){
@@ -781,7 +808,7 @@ else if(argc==5){
   free(RLE);
   }
 
-////////////////////////////////////////ascii////////////////////////////////////////
+////////////////////////////////////////final 計算壓縮率////////////////////////////////////////
   else if(checknum==0){
   printf("開始寫入bin\n");
   FILE *bin=fopen(argv[4], "wb");
@@ -789,7 +816,7 @@ else if(argc==5){
 
 	while(total<average){
 		for(int buff=0;buff<64;buff++){
-       if(buff==63){
+       		if(buff==63){
 				RLE[index].rY=0;
 				RLE[index+1].rY=0;
 				fwrite(&RLE[index].rY,sizeof(int),1,bin);
